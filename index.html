@@ -120,6 +120,10 @@
   <main id="app" class="w-full max-w-sm mx-auto relative z-10 opacity-0 pb-16 pt-8"></main>
 
   <script>
+    // Audio preloading
+    const correctSound = new Audio('correct.wav');
+    const wrongSound = new Audio('wrong.mp3');
+
     function toggleTheme() { document.documentElement.classList.toggle('dark'); }
 
     function updateThemeToggleVisibility() {
@@ -150,10 +154,11 @@
     const DICTIONARY = {};
     Object.keys(rawDictionary).forEach(k => DICTIONARY[k] = rawDictionary[k].split(','));
 
+    // State object updated with firstSpeaker
     const state = {
       view: 'PLAYER_SETUP', players: ['Daksh', 'Aditya', 'Anant', 'Saumya', 'Aayush', 'Aatif'],
       imposterCount: 1, category: '', secretWord: '', imposterIndices: [],
-      currentPlayerIndex: 0, selectedVoteIndex: null, accusedIndex: null
+      currentPlayerIndex: 0, selectedVoteIndex: null, accusedIndex: null, firstSpeaker: ''
     };
 
     const app = document.getElementById('app');
@@ -323,7 +328,7 @@
     }
 
     function renderDiscussion() {
-      const firstSpeaker = state.players[Math.floor(Math.random() * state.players.length)];
+      // firstSpeaker is stored in state instead of recalculating
       app.innerHTML = `
         <section class="glass-panel p-8 rounded-[2rem] space-y-6">
           <div class="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-5">
@@ -339,7 +344,7 @@
           
           <div class="bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl p-4 text-center">
             <p class="text-[8px] text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-1">First Interrogation</p>
-            <p class="text-xl font-light">${firstSpeaker}</p>
+            <p class="text-xl font-light">${state.firstSpeaker}</p>
           </div>
           
           <div class="pt-2 w-full">
@@ -380,6 +385,15 @@
     function renderReveal() {
       const wasImposter = state.imposterIndices.includes(state.accusedIndex);
       const imposterNames = state.imposterIndices.map(i => state.players[i]).join(', ');
+
+      // Trigger Sounds
+      if (wasImposter) {
+        correctSound.currentTime = 0;
+        correctSound.play().catch(e => console.log('Audio play failed: ', e));
+      } else {
+        wrongSound.currentTime = 0;
+        wrongSound.play().catch(e => console.log('Audio play failed: ', e));
+      }
       
       app.innerHTML = `
         <section class="glass-panel p-8 rounded-[2rem] space-y-8 flex flex-col justify-between min-h-[500px]">
@@ -451,8 +465,15 @@
     }
 
     function nextCard() {
-      if (state.currentPlayerIndex < state.players.length - 1) { switchView('PASS', 'x'); state.currentPlayerIndex++; } 
-      else { switchView('DISCUSSION'); }
+      if (state.currentPlayerIndex < state.players.length - 1) { 
+        switchView('PASS', 'x'); 
+        state.currentPlayerIndex++; 
+      } 
+      else { 
+        // SETTING FIRST SPEAKER HERE BEFORE TRANSITION TO DISCUSSION
+        state.firstSpeaker = state.players[Math.floor(Math.random() * state.players.length)];
+        switchView('DISCUSSION'); 
+      }
     }
 
     function selectSuspect(index) { state.selectedVoteIndex = index; renderActual(); }
