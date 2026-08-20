@@ -205,8 +205,8 @@
         <section class="glass-panel p-8 rounded-[2rem] space-y-8">
           <div class="flex items-end justify-between border-b border-black/10 dark:border-white/10 pb-5">
             <div>
-              <h1 class="font-serif-header text-4xl tracking-tight">Roster</h1>
-              <p class="text-[9px] uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400 mt-2">Initialize Crew</p>
+              <h1 class="font-serif-header text-4xl tracking-tight">Players</h1>
+              <p class="text-[9px] uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400 mt-2">PLAY</p>
             </div>
             <div class="text-right">
               <span class="block text-2xl font-light">${state.players.length}</span>
@@ -239,8 +239,8 @@
       app.innerHTML = `
         <section class="glass-panel p-8 rounded-[2rem] space-y-10 text-center">
           <div class="space-y-2">
-            <h1 class="font-serif-header text-4xl tracking-tight">Anomalies</h1>
-            <p class="text-[9px] uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">Set Threat Level</p>
+            <h1 class="font-serif-header text-4xl tracking-tight">Imposters</h1>
+            <p class="text-[9px] uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">Set Number of imposters</p>
           </div>
           <div class="flex items-center justify-between border border-black/10 bg-black/5 dark:border-white/10 dark:bg-white/[0.01] p-2 rounded-2xl max-w-[200px] mx-auto">
             <button onclick="adjustImposters(-1)" class="w-12 h-12 flex items-center justify-center text-neutral-500 hover:text-black dark:hover:text-white transition active:scale-90">
@@ -285,7 +285,7 @@
               <h2 class="font-serif-header text-4xl tracking-tight">${currentPlayer}</h2>
               <button onclick="rerollWord()" title="New word and reset round" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[9px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition active:scale-95">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                <span>Reroll</span>
+                <span>Restart</span>
               </button>
             </div>
           </div>
