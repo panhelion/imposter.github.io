@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Imposter</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: { darkbg: '#030303', lightbg: '#f8f9fa' }
+        }
+      }
+    }
+  </script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600;8..60,800&display=swap" rel="stylesheet">
+  
+  <style>
+    @font-face {
+      font-family: 'Google Sans Flex';
+      src: local('Google Sans Flex'), local('Google Sans'), sans-serif;
+    }
+
+    :root {
+      --font-serif: 'Source Serif 4', serif;
+      --font-sans: 'Google Sans Flex', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      overscroll-behavior-y: none;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+      transition: background-color 0.5s ease, color 0.5s ease;
+    }
+
+    .font-serif-header { font-family: var(--font-serif); font-weight: 300; }
+    .font-serif-bold { font-family: var(--font-serif); font-weight: 600; }
+    .font-serif-black { font-family: var(--font-serif); font-weight: 800; }
+
+    .noise-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.05;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    .glass-panel {
+      background: rgba(0, 0, 0, 0.02);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.05);
+    }
+    .dark .glass-panel {
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    }
+    
+    .touch-none { touch-action: none; -webkit-touch-callout: none; user-select: none; }
+    
+    .premium-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 0;
+      transition: border-color 0.3s ease;
+      color: inherit;
+    }
+    .premium-input:focus { border-bottom-color: #000; outline: none; }
+    .dark .premium-input { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    .dark .premium-input:focus { border-bottom-color: #fff; }
+
+    ::-webkit-scrollbar { width: 2px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.5); }
+
+    .dotm-square { position: relative; width: 32px; height: 32px; margin: 0 auto; }
+    .dotm-dot {
+      position: absolute; width: 6px; height: 6px; background-color: #000; border-radius: 50%;
+      animation: dotm-pulse 1.4s infinite ease-in-out both; transition: background-color 0.3s ease;
+    }
+    .dark .dotm-dot { background-color: #fff; }
+    .dotm-dot:nth-child(1) { top: 0; left: 0; animation-delay: -0.32s; }
+    .dotm-dot:nth-child(2) { top: 0; right: 0; animation-delay: -0.16s; }
+    .dotm-dot:nth-child(3) { top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: 0s; animation: dotm-pulse-center 1.4s infinite ease-in-out both;}
+    .dotm-dot:nth-child(4) { bottom: 0; left: 0; animation-delay: 0.16s; }
+    .dotm-dot:nth-child(5) { bottom: 0; right: 0; animation-delay: 0.32s; }
+
+    @keyframes dotm-pulse { 0%, 80%, 100% { transform: scale(0); opacity: 0; } 40% { transform: scale(1); opacity: 1; } }
+    @keyframes dotm-pulse-center { 0%, 80%, 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 40% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+  </style>
+</head>
+<body class="bg-lightbg dark:bg-darkbg text-neutral-900 dark:text-[#e5e5e5] min-h-[100dvh] flex items-center justify-center p-4 selection:bg-neutral-800 selection:text-white relative">
+
+  <!-- Preloader -->
+  <div id="preloader" class="fixed inset-0 z-50 bg-lightbg dark:bg-darkbg flex items-center justify-center transition-colors duration-500">
+    <div class="dotm-square scale-150">
+      <div class="dotm-dot"></div><div class="dotm-dot"></div><div class="dotm-dot"></div><div class="dotm-dot"></div><div class="dotm-dot"></div>
+    </div>
+  </div>
+
+  <div class="noise-bg"></div>
+
+  <!-- Theme Toggle -->
+  <button id="theme-toggle" onclick="toggleTheme()" class="fixed top-6 right-6 z-40 p-3.5 rounded-full glass-panel hover:scale-110 active:scale-95 transition-all duration-300">
+    <svg class="block dark:hidden w-5 h-5 text-neutral-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="hidden dark:block w-5 h-5 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+  </button>
+
+  <main id="app" class="w-full max-w-sm mx-auto relative z-10 opacity-0 pb-16 pt-8"></main>
+
+  <script>
+    function toggleTheme() { document.documentElement.classList.toggle('dark'); }
+
+    function updateThemeToggleVisibility() {
+      const toggle = document.getElementById('theme-toggle');
+      if (['PLAYER_SETUP', 'IMPOSTER_SETUP', 'REVEAL'].includes(state.view)) {
+        gsap.to(toggle, { opacity: 1, pointerEvents: 'auto', duration: 0.3 });
+      } else {
+        gsap.to(toggle, { opacity: 0, pointerEvents: 'none', duration: 0.3 });
+      }
+    }
+
+    const rawDictionary = {
+      "Pop Icons & Music": "The Weeknd,Taylor Swift,Billie Eilish,Michael Jackson,Drake,Beyoncé,Rihanna,Justin Bieber,Bruno Mars,Eminem",
+      "Blockbuster Movies": "Inception,Titanic,The Matrix,Interstellar,Gladiator,Jurassic Park,The Godfather,Fight Club,Forrest Gump,Pulp Fiction,The Dark Knight,Harry Potter,Lord of the Rings,Star Wars,Spider-Man,Iron Man,Avatar,Oppenheimer,Barbie,Dune,Joker,Deadpool,Transformers,Pirates of the Caribbean,Back to the Future,The Lion King,Shrek,Toy Story,Finding Nemo,Avengers Endgame",
+      "Actors & Superheroes": "Leonardo DiCaprio,Brad Pitt,Tom Cruise,Johnny Depp,Robert Downey Jr,Cillian Murphy,Ryan Gosling,Morgan Freeman,Keanu Reeves,Christian Bale,Zendaya,Margot Robbie,Scarlett Johansson,Angelina Jolie,Batman,Superman,Spider-Man,Iron Man,Thor,Captain America,Hulk,Black Panther,Deadpool,Wolverine,Joker,Thanos,Loki,Doctor Strange,Wonder Woman,Goku",
+      "Anime & Gaming": "Minecraft,GTA,Fortnite,Call of Duty,Pokemon,Super Mario,Zelda,Roblox,Cyberpunk,Elden Ring,Pikachu,Sonic,Kratos,Master Chief,Naruto,Dragon Ball,Attack on Titan,Death Note,Demon Slayer,Pac-Man,Among Us,League of Legends,Valorant,The Witcher,Overwatch",
+      "Luxury & Streetwear": "Rolex,Gucci,Nike,Ferrari,Lamborghini,Porsche,Supreme,Balenciaga,Louis Vuitton,Prada,Chanel,Dior,Air Jordan,Tesla,Apple,Cartier,Versace,Off-White,Mercedes Benz,Ray-Ban",
+      "Food & Global Bites": "Pizza,Burger,Sushi,Taco,Croissant,Ramen,Pasta,Shawarma,Dim Sum,Biryani,Waffles,Gelato,Nachos,Donut,Cheesecake,Pancakes,Hot Dog,Burrito,Pad Thai,Churros,Lasagna,Barbecue,Dumplings,Steak,French Fries",
+      "Technology & Web": "Artificial Intelligence,Virtual Reality,Blockchain,Quantum Computer,ChatGPT,TikTok,Instagram,YouTube,Spotify,Netflix,Discord,Twitch,Reddit,Smartwatch,Drone,Satellite,Microchip,Cybersecurity,Hologram,Algorithm,Self-Driving Car,Apple Vision Pro,Search Engine,VPN,Podcast",
+      "Landmarks & Wonders": "Great Wall of China,Eiffel Tower,Taj Mahal,Pyramids of Giza,Colosseum,Statue of Liberty,Machu Picchu,Burj Khalifa,Big Ben,Mount Everest,Grand Canyon,Niagara Falls,Louvre Museum,Sydney Opera House,Mount Fuji,Sahara Desert,Golden Gate Bridge,Stonehenge,Times Square,Petra",
+      "Global Cities": "Tokyo,New York,London,Paris,Dubai,Singapore,Los Angeles,Mumbai,Sydney,Rome,Seoul,Amsterdam,Bangkok,Las Vegas,Barcelona,Rio de Janeiro,Cairo,Toronto,Berlin,Kyoto",
+      "Countries": "Japan,United States,India,United Kingdom,France,Italy,Germany,Brazil,Australia,Canada,Spain,Switzerland,Egypt,South Korea,Mexico,Thailand,Greece,Netherlands,Norway,Saudi Arabia",
+      "Sports & Athletes": "Basketball,Football,Cricket,Tennis,Formula 1,Boxing,MMA,Swimming,Skateboarding,Surfing,Lionel Messi,Cristiano Ronaldo,LeBron James,Michael Jordan,Virat Kohli,Usain Bolt,Muhammad Ali,Mike Tyson,Roger Federer,Neymar",
+      "Mythology & Legends": "Zeus,Thor,Poseidon,Hades,Medusa,Hercules,Achilles,Anubis,Odin,Loki,Sphinx,Phoenix,Dragon,Kraken,Minotaur,Pegasus,Atlantis,Excalibur,Cyclops,Pandoras Box",
+      "Everyday & Household": "Microwave,Refrigerator,Coffee Maker,Toaster,Blender,Vacuum Cleaner,Washing Machine,Headphones,Sunglasses,Backpack,Umbrella,Toothbrush,Wallet,Wristwatch,Flashlight,Mirror,Passport,Keychain,Air Conditioner,Sneakers"
+    };
+
+    const DICTIONARY = {};
+    Object.keys(rawDictionary).forEach(k => DICTIONARY[k] = rawDictionary[k].split(','));
+
+    const state = {
+      view: 'PLAYER_SETUP', players: ['Daksh', 'Aditya', 'Anant', 'Saumya', 'Aayush', 'Aatif'],
+      imposterCount: 1, category: '', secretWord: '', imposterIndices: [],
+      currentPlayerIndex: 0, selectedVoteIndex: null, accusedIndex: null
+    };
+
+    const app = document.getElementById('app');
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        gsap.to('#preloader', { opacity: 0, duration: 0.6, onComplete: () => document.getElementById('preloader').remove() });
+        renderActual();
+        gsap.to('#app', { opacity: 1, duration: 0.8, delay: 0.1 });
+      }, 1000);
+    });
+
+    function switchView(newView, direction = 'y') {
+      const isX = direction === 'x';
+      gsap.to(app, {
+        opacity: 0,
+        x: isX ? -30 : 0,
+        y: isX ? 0 : 10,
+        duration: 0.25,
+        ease: "power2.in",
+        onComplete: () => {
+          state.view = newView;
+          renderActual();
+          gsap.fromTo(app, 
+            { opacity: 0, x: isX ? 30 : 0, y: isX ? 0 : -10 }, 
+            { opacity: 1, x: 0, y: 0, duration: 0.35, ease: "power2.out" }
+          );
+        }
+      });
+    }
+
+    function renderActual() {
+      updateThemeToggleVisibility();
+      if (state.view === 'PLAYER_SETUP') renderPlayerSetup();
+      else if (state.view === 'IMPOSTER_SETUP') renderImposterSetup();
+      else if (state.view === 'PASS') renderPass();
+      else if (state.view === 'DISCUSSION') renderDiscussion();
+      else if (state.view === 'SUSPENSE') renderSuspense();
+      else if (state.view === 'REVEAL') renderReveal();
+    }
+
+    function renderPlayerSetup() {
+      app.innerHTML = `
+        <section class="glass-panel p-8 rounded-[2rem] space-y-8">
+          <div class="flex items-end justify-between border-b border-black/10 dark:border-white/10 pb-5">
+            <div>
+              <h1 class="font-serif-header text-4xl tracking-tight">Roster</h1>
+              <p class="text-[9px] uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400 mt-2">Initialize Crew</p>
+            </div>
+            <div class="text-right">
+              <span class="block text-2xl font-light">${state.players.length}</span>
+            </div>
+          </div>
+          <div class="space-y-3 max-h-[45vh] overflow-y-auto pr-2 pb-2">
+            ${state.players.map((p, i) => `
+              <div class="flex items-center gap-4 group">
+                <button onclick="removePlayer(${i})" class="w-8 h-8 flex-shrink-0 flex items-center justify-center text-neutral-400 hover:text-red-500 dark:text-rose-500 dark:hover:text-rose-400 transition duration-300 active:scale-90 ${state.players.length <= 3 ? 'opacity-0 pointer-events-none' : ''}">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+                <input type="text" value="${p}" oninput="updateName(${i}, this.value)" class="premium-input w-full py-2 text-sm placeholder-neutral-400 dark:placeholder-neutral-600" placeholder="Identity ${i+1}" />
+              </div>
+            `).join('')}
+          </div>
+          <div class="flex gap-4 pt-2">
+            <button onclick="addPlayer()" class="px-6 py-4 border border-black/20 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10 transition duration-300 flex items-center justify-center rounded-xl active:scale-95 ${state.players.length >= 15 ? 'opacity-30 pointer-events-none' : ''}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <button onclick="switchView('IMPOSTER_SETUP')" class="flex-1 py-4 bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 text-sm font-medium tracking-wide rounded-xl transition-all duration-300 active:scale-[0.98]">
+              Proceed
+            </button>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderImposterSetup() {
+      const maxAllowed = Math.min(5, state.players.length - 1);
+      app.innerHTML = `
+        <section class="glass-panel p-8 rounded-[2rem] space-y-10 text-center">
+          <div class="space-y-2">
+            <h1 class="font-serif-header text-4xl tracking-tight">Anomalies</h1>
+            <p class="text-[9px] uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">Set Threat Level</p>
+          </div>
+          <div class="flex items-center justify-between border border-black/10 bg-black/5 dark:border-white/10 dark:bg-white/[0.01] p-2 rounded-2xl max-w-[200px] mx-auto">
+            <button onclick="adjustImposters(-1)" class="w-12 h-12 flex items-center justify-center text-neutral-500 hover:text-black dark:hover:text-white transition active:scale-90">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14"/></svg>
+            </button>
+            <span class="block text-4xl font-light">${state.imposterCount}</span>
+            <button onclick="adjustImposters(1)" class="w-12 h-12 flex items-center justify-center text-neutral-500 hover:text-black dark:hover:text-white transition active:scale-90">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+          <div class="flex gap-4">
+            <button onclick="switchView('PLAYER_SETUP')" class="px-6 py-4 border border-black/20 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl transition duration-300 active:scale-95">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <button onclick="startGame()" class="flex-1 py-4 bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 text-sm font-medium tracking-wide rounded-xl transition-all duration-300 active:scale-[0.98]">
+              Initialize Protocol
+            </button>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderPass() {
+      const currentPlayer = state.players[state.currentPlayerIndex];
+      const isImposter = state.imposterIndices.includes(state.currentPlayerIndex);
+      const progressPercent = ((state.currentPlayerIndex) / state.players.length) * 100;
+
+      app.innerHTML = `
+        <section class="glass-panel p-8 rounded-[2rem] flex flex-col justify-between min-h-[520px] relative overflow-hidden">
+          
+          <div class="space-y-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="h-[2px] flex-1 bg-black/10 dark:bg-white/10 overflow-hidden">
+                <div class="h-full bg-black dark:bg-white transition-all duration-700 ease-out" style="width: ${progressPercent}%"></div>
+              </div>
+              <span class="text-[9px] uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400 font-bold text-right">
+                ${state.currentPlayerIndex + 1} / ${state.players.length}
+              </span>
+            </div>
+            
+            <div class="flex items-center justify-between pt-1">
+              <h2 class="font-serif-header text-4xl tracking-tight">${currentPlayer}</h2>
+              <button onclick="rerollWord()" title="New word and reset round" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[9px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition active:scale-95">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <span>Reroll</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="card" class="relative glass-panel rounded-2xl p-8 flex flex-col items-center justify-center flex-1 border-black/5 dark:border-white/5 my-6 transition-colors duration-500 select-none overflow-hidden">
+            
+            <div id="card-hidden" class="absolute inset-0 flex flex-col items-center justify-center space-y-4 z-10 transition-opacity duration-300">
+              <div class="flex space-x-1.5 opacity-60">
+                <div class="w-1.5 h-1.5 rounded-full bg-black dark:bg-white animate-pulse"></div>
+                <div class="w-1.5 h-1.5 rounded-full bg-black dark:bg-white animate-pulse" style="animation-delay: 0.2s"></div>
+                <div class="w-1.5 h-1.5 rounded-full bg-black dark:bg-white animate-pulse" style="animation-delay: 0.4s"></div>
+              </div>
+              <p class="text-[9px] font-medium uppercase tracking-[0.3em] text-neutral-500 dark:text-neutral-400">Classified</p>
+            </div>
+            
+            <div id="card-revealed" class="absolute inset-0 flex flex-col items-center justify-center space-y-3 opacity-0 scale-95 z-0 pointer-events-none transition-all duration-300 w-full text-center px-4">
+              <p class="text-[9px] uppercase tracking-[0.2em] ${isImposter ? 'text-rose-600 dark:text-rose-500 font-bold' : 'text-neutral-500 dark:text-neutral-400'}">
+                ${isImposter ? 'Imposter Protocol • Target Category' : 'Target Identified'}
+              </p>
+              <p class="text-3xl font-serif-header tracking-tight ${isImposter ? 'text-rose-600 dark:text-rose-400' : ''}">
+                ${isImposter ? state.category : state.secretWord}
+              </p>
+            </div>
+          </div>
+
+          <div class="space-y-3 relative z-20 flex flex-col justify-end">
+            <button id="hold-btn" class="w-full py-5 bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 text-sm font-medium tracking-wide rounded-xl select-none touch-none transition-all duration-300 active:scale-[0.98]">
+              Press & Hold to Decrypt
+            </button>
+            
+            <div id="pass-container" class="h-0 opacity-0 overflow-hidden transition-all duration-400 ease-out flex-shrink-0">
+              <button onclick="nextCard()" id="next-btn" class="w-full py-5 bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 text-sm font-medium tracking-wide rounded-xl transition-all duration-300 active:scale-[0.98]">
+                ${state.currentPlayerIndex < state.players.length - 1 ? 'Lock & Pass Device' : 'Begin Deliberation'}
+              </button>
+            </div>
+          </div>
+        </section>
+      `;
+      attachHoldListeners();
+    }
+
+    function renderDiscussion() {
+      const firstSpeaker = state.players[Math.floor(Math.random() * state.players.length)];
+      app.innerHTML = `
+        <section class="glass-panel p-8 rounded-[2rem] space-y-6">
+          <div class="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-5">
+            <div>
+              <h2 class="font-serif-header text-4xl tracking-tight">Deliberation</h2>
+              <p class="text-[9px] uppercase tracking-[0.2em] text-neutral-500 mt-1">Identify the Threat</p>
+            </div>
+            <button onclick="rerollWord()" title="Get new word for same crew" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[9px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition active:scale-95">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>New Word</span>
+            </button>
+          </div>
+          
+          <div class="bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl p-4 text-center">
+            <p class="text-[8px] text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-1">First Interrogation</p>
+            <p class="text-xl font-light">${firstSpeaker}</p>
+          </div>
+          
+          <div class="pt-2 w-full">
+             <p class="text-[9px] text-neutral-500 uppercase tracking-widest text-center mb-4">Select Suspect</p>
+             <div class="grid grid-cols-2 gap-2 w-full pb-4">
+                ${state.players.map((p, i) => `
+                  <button onclick="selectSuspect(${i})" class="relative w-full p-3.5 border ${state.selectedVoteIndex === i ? 'border-black bg-black/10 text-black dark:border-white dark:bg-white/10 dark:text-white scale-[0.98]' : 'border-black/10 bg-black/[0.02] text-neutral-600 dark:border-white/5 dark:bg-white/[0.02] dark:text-neutral-400'} rounded-xl text-sm text-center hover:bg-black/5 hover:text-black dark:hover:bg-white/10 dark:hover:text-white transition-all duration-300 active:scale-95">
+                    ${p}
+                  </button>
+                `).join('')}
+             </div>
+          </div>
+        </section>
+        ${state.selectedVoteIndex !== null ? `
+          <div class="fixed bottom-6 left-0 right-0 px-4 z-50 flex justify-center animate-[slideUp_0.3s_ease-out_forwards]">
+            <button onclick="confirmVote()" class="w-full max-w-sm py-5 bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 text-sm font-medium tracking-wide rounded-xl shadow-2xl hover:scale-[0.98] active:scale-95 transition-all duration-200">
+              Eliminate ${state.players[state.selectedVoteIndex]}
+            </button>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    function renderSuspense() {
+      app.innerHTML = `
+        <section class="glass-panel p-12 rounded-[2rem] text-center flex flex-col items-center justify-center min-h-[400px]">
+          <div class="space-y-12">
+            <div class="dotm-square"><div class="dotm-dot"></div><div class="dotm-dot"></div><div class="dotm-dot"></div><div class="dotm-dot"></div><div class="dotm-dot"></div></div>
+            <div class="space-y-2">
+               <p class="text-[9px] uppercase tracking-[0.3em] text-neutral-500">Analyzing Target</p>
+               <h2 class="font-serif-header text-3xl tracking-tight">${state.players[state.accusedIndex]}</h2>
+             </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderReveal() {
+      const wasImposter = state.imposterIndices.includes(state.accusedIndex);
+      const imposterNames = state.imposterIndices.map(i => state.players[i]).join(', ');
+      
+      app.innerHTML = `
+        <section class="glass-panel p-8 rounded-[2rem] space-y-8 flex flex-col justify-between min-h-[500px]">
+          <div class="border-b border-black/10 dark:border-white/10 pb-6 text-center w-full flex flex-col items-center justify-center pt-4">
+            <h2 class="font-serif-black text-5xl sm:text-6xl md:text-7xl leading-[0.9] tracking-tighter uppercase ${wasImposter ? 'text-emerald-600 dark:text-emerald-400' : 'text-neutral-900 dark:text-white'} w-full">
+              ${wasImposter ? 'IMPOSTER<br>EXPOSED' : 'NOT THE<br>IMPOSTER'}
+            </h2>
+            <p class="text-2xl font-light mt-6">${state.players[state.accusedIndex]}</p>
+            <p class="text-[10px] text-neutral-500 mt-2 uppercase tracking-[0.2em] font-medium">was ${wasImposter ? 'the' : 'NOT the'} imposter</p>
+          </div>
+          
+          <div class="grid grid-cols-1 gap-1 w-full bg-black/5 dark:bg-black/40 rounded-xl p-1 border border-black/10 dark:border-white/5">
+              <div class="flex flex-col p-4 bg-white/50 dark:bg-white/[0.02] rounded-lg">
+                <span class="text-[8px] text-neutral-500 uppercase tracking-widest mb-1">Target Subject(s)</span>
+                <span class="text-base tracking-wide font-medium dark:font-normal">${imposterNames}</span>
+              </div>
+              <div class="flex flex-col p-4 bg-white/50 dark:bg-white/[0.02] rounded-lg">
+                <span class="text-[8px] text-neutral-500 uppercase tracking-widest mb-1">Classified Category</span>
+                <span class="text-base tracking-wide font-medium dark:font-normal">${state.category}</span>
+              </div>
+              <div class="flex flex-col p-4 bg-white/50 dark:bg-white/[0.02] rounded-lg">
+                <span class="text-[8px] text-neutral-500 uppercase tracking-widest mb-1">Decrypted Keyword</span>
+                <span class="text-base tracking-wide font-medium dark:font-normal">${state.secretWord}</span>
+              </div>
+          </div>
+
+          <button onclick="switchView('PLAYER_SETUP')" class="w-full py-5 border border-black/20 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10 text-sm font-medium tracking-wide rounded-xl active:scale-[0.98] transition duration-300">
+            Initialize New Round
+          </button>
+        </section>
+      `;
+    }
+
+    function addPlayer() { if (state.players.length < 15) { state.players.push(`Identity ${state.players.length + 1}`); renderActual(); } }
+    function removePlayer(index) {
+      if (state.players.length > 3) {
+        state.players.splice(index, 1);
+        const max = Math.min(5, state.players.length - 1);
+        if (state.imposterCount > max) state.imposterCount = max;
+        renderActual();
+      }
+    }
+    function updateName(index, val) { state.players[index] = val || `Identity ${index + 1}`; }
+    function adjustImposters(delta) {
+      let newCount = state.imposterCount + delta;
+      if (newCount >= 1 && newCount <= Math.min(5, state.players.length - 1)) { state.imposterCount = newCount; renderActual(); }
+    }
+
+    function startGame() {
+      rerollWord();
+    }
+
+    function rerollWord() {
+      const categories = Object.keys(DICTIONARY);
+      state.category = categories[Math.floor(Math.random() * categories.length)];
+      const words = DICTIONARY[state.category];
+      state.secretWord = words[Math.floor(Math.random() * words.length)];
+      
+      state.imposterIndices = [];
+      let available = [...Array(state.players.length).keys()];
+      for(let i = 0; i < state.imposterCount; i++) {
+        let rnd = Math.floor(Math.random() * available.length);
+        state.imposterIndices.push(available[rnd]);
+        available.splice(rnd, 1);
+      }
+      state.currentPlayerIndex = 0; 
+      state.selectedVoteIndex = null; 
+      switchView('PASS');
+    }
+
+    function nextCard() {
+      if (state.currentPlayerIndex < state.players.length - 1) { switchView('PASS', 'x'); state.currentPlayerIndex++; } 
+      else { switchView('DISCUSSION'); }
+    }
+
+    function selectSuspect(index) { state.selectedVoteIndex = index; renderActual(); }
+    function confirmVote() {
+      if (state.selectedVoteIndex === null) return;
+      state.accusedIndex = state.selectedVoteIndex; state.selectedVoteIndex = null;
+      switchView('SUSPENSE'); setTimeout(() => switchView('REVEAL'), 3000);
+    }
+
+    function attachHoldListeners() {
+      const btn = document.getElementById('hold-btn');
+      const card = document.getElementById('card');
+      const cardHidden = document.getElementById('card-hidden');
+      const cardRevealed = document.getElementById('card-revealed');
+      const passContainer = document.getElementById('pass-container');
+      const isImposter = state.imposterIndices.includes(state.currentPlayerIndex);
+      const isDark = document.documentElement.classList.contains('dark');
+      let hasRevealed = false;
+
+      const show = () => {
+        gsap.to(cardHidden, { opacity: 0, scale: 1.05, duration: 0.2 });
+        gsap.to(cardRevealed, { opacity: 1, scale: 1, duration: 0.3, delay: 0.05, ease: "back.out(1.5)" });
+        
+        let bgColor = isImposter 
+          ? (isDark ? 'rgba(225, 29, 72, 0.05)' : 'rgba(225, 29, 72, 0.08)')
+          : (isDark ? 'rgba(34, 197, 94, 0.03)' : 'rgba(34, 197, 94, 0.05)');
+        let borderColor = isImposter 
+          ? (isDark ? 'rgba(225, 29, 72, 0.2)' : 'rgba(225, 29, 72, 0.3)')
+          : (isDark ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.3)');
+
+        gsap.to(card, { 
+          backgroundColor: bgColor, borderColor: borderColor,
+          borderTopColor: isImposter ? 'rgba(225, 29, 72, 0.4)' : 'rgba(34, 197, 94, 0.4)',
+          scale: 1.02, duration: 0.3, ease: "power2.out"
+        });
+        
+        gsap.to(btn, { scale: 0.96, opacity: 0.8, duration: 0.1 });
+      };
+
+      const hide = () => {
+        gsap.to(cardRevealed, { opacity: 0, scale: 0.95, duration: 0.2 });
+        gsap.to(cardHidden, { opacity: 1, scale: 1, duration: 0.3, delay: 0.1 });
+        
+        gsap.to(card, { 
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.015)' : 'rgba(0, 0, 0, 0.03)',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)',
+          borderTopColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+          scale: 1, duration: 0.3
+        });
+
+        gsap.to(btn, { scale: 1, opacity: 1, duration: 0.1 });
+
+        if (!hasRevealed) {
+          hasRevealed = true;
+          btn.innerText = "Hold to View Again";
+          btn.className = "w-full py-3 bg-transparent text-neutral-500 border border-transparent text-xs font-medium tracking-wide rounded-xl select-none touch-none transition-all duration-300 active:scale-[0.98]";
+          
+          gsap.to(passContainer, { height: 'auto', opacity: 1, duration: 0.4, ease: "power2.out", marginTop: "12px" });
+        }
+      };
+
+      btn.addEventListener('pointerdown', (e) => { e.preventDefault(); show(); });
+      document.addEventListener('pointerup', () => { hide(); });
+      btn.addEventListener('contextmenu', e => e.preventDefault());
+    }
+  </script>
+</body>
+</html>
